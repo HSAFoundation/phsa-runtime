@@ -1,0 +1,139 @@
+/*
+  Copyright (c) 2015-2016 General Processor Tech.
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+/**
+ * Declaration of FinalizedProgram interface.
+ *
+ * The derived classes store implementation specific code resulting from
+ * an implementation specific finalization.
+ *
+ * @author pekka.jaaskelainen@parmance.com for General Processor Tech.
+ */
+
+#ifndef PHSA_FINALIZED_PROGRAM_HH
+#define PHSA_FINALIZED_PROGRAM_HH
+
+#include <hsa.h>
+#include <hsa_ext_finalize.h>
+#include <libelf.h>
+#include "HSAObjectMapping.hh"
+#include "gcc-phsa.h"
+#include "Executable.hh"
+
+namespace phsa {
+
+class FinalizedProgram
+    : public HSAObjectMapping<FinalizedProgram, hsa_code_object_t> {
+public:
+  FinalizedProgram(char *ElfBlob, size_t ElfSize, hsa_isa_t ISA,
+                   hsa_machine_model_t MM, hsa_profile_t P,
+                   hsa_default_float_rounding_mode_t RM);
+  virtual ~FinalizedProgram();
+
+  /// The final finalized binary image in the disk, if any produced so far.
+  /// Empty string otherwise.
+  std::string binFileName() const { return BinaryFileName; }
+  void setBinFileName(std::string Fname) { BinaryFileName = Fname; }
+
+  // The ELF blob in memory that can be used as a symbol index.
+  char *elfBlob() const { return ELFBlob; }
+  // The size of the ELF blob in bytes.
+  size_t elfSize() const { return ELFSize; }
+
+  virtual std::size_t serializedSize() const = 0;
+  virtual void serializeTo(uint8_t *Buffer) const = 0;
+
+  hsa_machine_model_t getMachineModel() { return MachineModel; }
+  hsa_profile_t getProfile() { return Profile; }
+  hsa_default_float_rounding_mode_t getDefaultRoundingMode() {
+    return DefaultRoundingMode;
+  }
+  hsa_isa_t getISA() { return ISA; }
+
+  uint32_t version() const { return Version; }
+  void setVersion(uint32_t V) { Version = V; }
+
+  // Loads the given control directives originating from
+  // hsa_ext_program_finalize parameters and checks them
+  // against function/kernel defined ones, if existing.
+  bool
+  loadAndCheckControlDirectives(hsa_ext_control_directives_t ControlDirectives);
+
+  // Returns the address of the symbol in memory.
+  virtual uint64_t symbolAddress(std::string SymbolName,
+                                 Elf64_Sym *Symbol = nullptr) = 0;
+
+<<<<<<< HEAD:include/FinalizedProgram.hh
+  virtual Symbol *findSymbol(std::string const &SymbolName);
+=======
+  virtual Symbol *findSymbol(std::string const& SymbolName);
+  virtual phsa_descriptor *findDescriptor(std::string const& SymbolName);
+>>>>>>> 75116c793e97d2d4d3caa60ccde288cadeeee973:src/FinalizedProgram.hh
+
+  virtual void addSymbol(Symbol *Symbol) { Symbols.push_back(Symbol); }
+
+  using symbol_iterator = std::list<Symbol *>::iterator;
+
+  using func_descriptor_iterator =
+    std::unordered_map<std::string, phsa_descriptor *>::iterator;
+
+  symbol_iterator symbol_begin() { return Symbols.begin(); }
+  symbol_iterator symbol_end() { return Symbols.end(); }
+
+  func_descriptor_iterator func_descriptors_begin()
+  { return FuncDescriptors.begin(); }
+  func_descriptor_iterator func_descriptors_end()
+  { return FuncDescriptors.end(); }
+
+  // Sets the address of a global symbol declaration that is external
+  // in the kernel binary.
+  virtual void defineGlobalSymbolAddress(std::string SymbolName,
+                                         uint64_t Addr) = 0;
+
+  void setExecutable(const Executable &Owner) { Parent = &Owner; }
+
+protected:
+  // The symbols belonging to this code object.
+  std::list<Symbol *> Symbols;
+  // The executable that includes this code object.
+  const Executable *Parent = nullptr;
+
+  // This is set to false in case the loaded blob was found illegal.
+  bool IsValid;
+  std::string BinaryFileName;
+  // The loaded ELF file in memory.
+  char *ELFBlob;
+  // The size of the ELF image.
+  size_t ELFSize;
+  // The function descriptors originating from GCC (see gcc-phsa.h). */
+  std::unordered_map<std::string, phsa_descriptor *> FuncDescriptors;
+
+  hsa_machine_model_t MachineModel;
+  hsa_profile_t Profile;
+  hsa_default_float_rounding_mode_t DefaultRoundingMode;
+  hsa_isa_t ISA;
+
+  uint32_t Version;
+};
+
+#define PHSA_HOST_DEF_PTR_PREFIX "__phsa.host_def."
+}
+#endif
