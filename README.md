@@ -16,9 +16,9 @@ who published it as an open source project in November 2016.
 
 # Status
 
-Phsa-runtime fully passes the [HSA runtime conformance](https://github.com/HSAFoundation/HSA-Runtime-Conformance) 
-test suite. There are a few HSA API methods that are not implemented yet, and 
-a small number of implemented ones might be missing features. 
+Phsa-runtime fully passes the [HSA runtime conformance](https://github.com/HSAFoundation/HSA-Runtime-Conformance)
+test suite. There are a few HSA API methods that are not implemented yet, and
+a small number of implemented ones might be missing features.
 
 # Requirements
 
@@ -28,7 +28,7 @@ a small number of implemented ones might be missing features.
  * Boost Filesystem library (libboost-filesystem-dev)
  * Boost System library (libboost-system-dev)
  * libelf (libelf-dev)
- * [GCC BRIG frontend](https://github.com/HSAFoundation/gccbrig/tree/gccbrig-gcc-master) with a backend for the desired device to be used as a kernel agent
+ * [GCC BRIG frontend](https://github.com/HSAFoundation/gccbrig/) with a backend for the desired device to be used as a kernel agent
 
 # Installation
 
@@ -40,6 +40,38 @@ cd build
 cmake ..
 make
 make install
+```
+
+# GCC BRIG frontend
+
+When a GCC version with the BRIG frontend ('gccbrig' binary) is installed to PATH and
+libhsail-rt can be found by both the static and the dynamic linker, GCC-based finalization
+should just work.
+
+To use the GCC BRIG FE from GCC build tree without needing to install it (useful for GCC
+developers), a few environment variables need to be set. An example of how to setup
+such an environment is shown in the following:
+
+```
+# This is the location of the root of your GCC build.
+GCC_BUILDROOT=$HOME/src/gccbrig
+
+export LIBRARY_PATH=$GCC_BUILDROOT/build-master/gcc
+
+export PHSA_COMPILER_FLAGS=-L$LIBRARY_PATH
+
+# The location of libhsail-rt.so for your target in the
+# GCC's build tree.
+export PHSA_RUNTIME_DIR=$GCC_BUILDROOT/x86_64-pc-linux-gnu/libhsail-rt/.libs"
+
+# Ensure phsa-runtime's finalizer's linker finds libhsail-rt.
+export LDFLAGS="-L$PHSA_RUNTIME_DIR"
+
+# Ensure the runtime linker finds it as well.
+export LD_LIBRARY_PATH=$PHSA_RUNTIME_DIR:$LD_LIBRARY_PATH
+
+# Add 'gccbrig' to the PATH from the build tree.
+export PATH=$GCC_BUILDROOT/gcc/:$PATH
 ```
 
 # License
