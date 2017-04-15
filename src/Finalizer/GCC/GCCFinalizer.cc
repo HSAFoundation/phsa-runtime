@@ -107,7 +107,7 @@ HSAReturnValue<hsa_code_object_s> GCCFinalizer::finalizeProgram(
 
   std::string dynObjectPath = LastBrigFile + ".so";
   std::string compileCmd = brigFrontendBin.string() +
-                           " -frounding-math -fno-use-linker-plugin -fPIC " +
+                           " -frounding-math -fno-use-linker-plugin -lm -fPIC " +
                            BrigFiles + " " + phsaRTFlags +
                            " -shared -fPIC -o " + dynObjectPath + " ";
 

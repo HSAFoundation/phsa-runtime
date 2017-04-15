@@ -83,7 +83,7 @@ public:
   }
 
   virtual hsa_device_type_t getDeviceType() const override {
-    return HSA_DEVICE_TYPE_CPU;
+    return HSA_DEVICE_TYPE_GPU;
   }
 
   virtual std::array<uint32_t, 4> getCacheSize() const override {

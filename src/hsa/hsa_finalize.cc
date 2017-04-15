@@ -113,8 +113,8 @@ hsa_status_t HSA_API hsa_ext_program_add_module(hsa_ext_program_t program,
   const char *CodeSection = nullptr;
   size_t CodeSectionSize = 0;
 
-  if (strncmp(ModuleHeader->identification, "HSA BRIG", 8) != 0)
-    return (hsa_status_t)HSA_EXT_STATUS_ERROR_INVALID_MODULE;
+  //if (strncmp(ModuleHeader->identification, "HSA BRIG", 8) != 0)
+  //  return (hsa_status_t)HSA_EXT_STATUS_ERROR_INVALID_MODULE;
 
   // Find the code section.
   for (uint32_t SectionIndex = 0; SectionIndex < ModuleHeader->sectionCount;

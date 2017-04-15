@@ -19,6 +19,8 @@ set (HSA_SOURCE_FILES hsa/hsa_runtime.cc hsa/hsa_agent.cc hsa/hsa_signal.cc
         hsa/hsa_code.cc hsa/hsa_executable.cc hsa/hsa_system.cc hsa/hsa_status.cc
         hsa/hsa_finalize.cc hsa/hsa_image.cc)
 
+set (HSA_AMD_SOURCE_FILES amd/hsa_ext_amd.cc)
+
 set (CPU_DEVICE_SOURCE_FILES FixedMemoryRegion.cc
         Devices/CPU/CPUMemoryRegion.cc Devices/CPU/UserModeQueue.cc Devices/CPU/StdAtomicSignal.cc
         Devices/CPU/GCCBuiltinSignal.cc Devices/CPU/CPUKernelAgent.cc)
@@ -33,7 +35,7 @@ set(SOURCE_FILES
         Signal.cc Queue.cc FinalizedProgram.cc HSAILProgram.cc Finalizer.cc
         common/MemoryOrder.cc common/Atomic.cc ISA.cc Runtime.cc)
 
-add_library(${LIBRARY_NAME} SHARED ${SOURCE_FILES} ${HSA_SOURCE_FILES}
+add_library(${LIBRARY_NAME} SHARED ${SOURCE_FILES} ${HSA_SOURCE_FILES} ${HSA_AMD_SOURCE_FILES}
         ${CPU_DEVICE_SOURCE_FILES} ${GCC_FINALIZER_SOURCE_FILES} ${CPUONLY_PLATFORM_SOURCE_FILES})
 
 set_target_properties(${LIBRARY_NAME} PROPERTIES SOVERSION 1)

@@ -86,7 +86,7 @@ hsa_status_t HSA_API hsa_memory_copy(void *dst, const void *src, size_t size) {
 
 hsa_status_t HSA_API hsa_memory_assign_agent(void *ptr, hsa_agent_t agent,
                                              hsa_access_permission_t access) {
-  ABORT_UNIMPLEMENTED;
+  //ABORT_UNIMPLEMENTED;
   return HSA_STATUS_SUCCESS;
 }
 
