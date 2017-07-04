@@ -103,10 +103,14 @@ public:
   virtual uint32_t getWavefrontSize() const override { return 1; }
 
   virtual std::array<uint16_t, 3> getWorkGroupMaxDim() const override {
-    return {256, 256, 256};
+    // hcc assumes at least 512 local size can be used. Otherwise
+    // we would use the minimum maximum of 256 here to hint small
+    // local sizes (with possibly many work-groups) are preferable
+    // for CPU/DSP Agents.
+    return {512, 512, 512};
   }
 
-  virtual uint32_t getWorkGroupMaxSize() const override { return 256; }
+  virtual uint32_t getWorkGroupMaxSize() const override { return 512; }
 
   virtual hsa_dim3_t getGridMaxDim() const override {
     return {std::numeric_limits<uint32_t>::max(),
