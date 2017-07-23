@@ -65,7 +65,7 @@ public:
     assert(false && "Unsupported float rounding mode");
   }
 
-  virtual hsa_profile_t getProfile() const override { return HSA_PROFILE_BASE; }
+  virtual hsa_profile_t getProfile() const override { return HSA_PROFILE_FULL; }
 
   virtual uint32_t getQueuesMax() const override { return 1024; }
 
@@ -83,7 +83,7 @@ public:
   }
 
   virtual hsa_device_type_t getDeviceType() const override {
-    return HSA_DEVICE_TYPE_GPU;
+    return HSA_DEVICE_TYPE_CPU;
   }
 
   virtual std::array<uint32_t, 4> getCacheSize() const override {
