@@ -80,6 +80,15 @@ public:
     return reinterpret_cast<hsa_queue_t *>(&HSAQueue);
   }
 
+  // Used to internally keep book of packets that have been processed.
+  void SetPacketProcessed(size_t QI, bool Flag)
+    { if (PacketIsProcessed.size() == 0)
+        PacketIsProcessed.resize(HSAQueue.hsa_queue.size, false);
+      PacketIsProcessed[QI] = Flag; }
+  bool IsPacketProcessed(size_t QI) const {
+    if (PacketIsProcessed.size() == 0) return false;
+    return PacketIsProcessed[QI]; }
+
 protected:
   uint64_t getNextId() const { return ++QueueCount; }
 
@@ -102,6 +111,7 @@ private:
   Agent *Owner;
   bool Destroyed;
   bool Inactivated;
+  std::vector<bool> PacketIsProcessed;
 
 protected:
   phsa_queue HSAQueue;

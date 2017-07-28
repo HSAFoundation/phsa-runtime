@@ -165,6 +165,9 @@ void CPUKernelAgent::Execute() {
   RunningQueue = nullptr;
   InterruptingTheQueue = false;
 
+  hsa_signal_value_t LastDoorBell =
+    std::numeric_limits<hsa_signal_value_t>::max();
+
   while (!ShutDown) {
 
     std::list<Queue *> Queues = getQueues();
@@ -173,6 +176,7 @@ void CPUKernelAgent::Execute() {
          It != End; ++It) {
 
       Queue *Q = *It;
+      hsa_queue_t *HSAQueue = Q->getHSAQueue();
 
       RunningQueue = Q;
       if (InterruptingTheQueue)
@@ -183,28 +187,80 @@ void CPUKernelAgent::Execute() {
         continue;
       }
 
-      hsa_queue_t *HSAQueue = Q->getHSAQueue();
+      // For multi producer queues, the doorbell signal might not monotonically
+      // increase: The packet updates from multiple producers might not
+      // end up to the queue in the write index order. Therefore, we must
+      // monitor the doorbell signal for any changes to avoid missing packets
+      // that are added for older write index than the largest we have already
+      // processed. The read index update can be done only after all packets
+      // until that read index have been processed.
 
-      hsa_signal_value_t LastReadPos =
-          hsa_signal_load_acquire(HSAQueue->doorbell_signal);
+      // TO CHECK: Can this actually lead unoptimal queue processing or
+      // even starvation as writers with lower write indices can hold back queue
+      // writing (as the read index cannot be updated) even though there are
+      // free slots _after_ the lower write index due to them having been
+      // processed earlier/faster?
 
-      if (LastReadPos == std::numeric_limits<hsa_signal_value_t>::max() ||
-          LastReadPos < Q->loadReadIndex(MemoryOrder::Relaxed)) {
+      hsa_signal_value_t DoorBell =
+        hsa_signal_load_acquire(HSAQueue->doorbell_signal);
+
+      // TODO: use a signal wait != LastDoorBell here to allow
+      // sleep waiting. Should work as LastDoorBell is initially max().
+      if (DoorBell == std::numeric_limits<hsa_signal_value_t>::max() ||
+          DoorBell == LastDoorBell) {
         continue;
       }
+      DoorBell = LastDoorBell;
 
-      uint64_t CurrentIndex = 0;
+      uint64_t CurrentReadIndex = Q->loadReadIndex(MemoryOrder::Relaxed);
+      uint64_t CurrentWriteIndex = Q->loadWriteIndex(MemoryOrder::Relaxed);
+
       uint64_t QueueSize = HSAQueue->size;
-      do {
-        CurrentIndex = Q->loadReadIndex(MemoryOrder::Relaxed);
+
+      // In multiple producer queue we have to always check all packets
+      // in the queue up to the write index, because we cannot be sure we
+      // have received the highest write index from the door bell due to
+      // multiple updaters of the write index.
+
+      // In single producer queues, we execute packets in order as we know
+      // the new packets are added by a single producer to a single write
+      // position which are given out in monotonic order.
+
+      int PacketsToCheck =
+        HSAQueue->type == HSA_QUEUE_TYPE_SINGLE ? 1 : QueueSize;
+      for (int QI = 0; QI < PacketsToCheck; ++QI) {
+
+        uint64_t CurrentIndex = CurrentReadIndex + QI;
+        int PacketIndex = CurrentIndex % QueueSize;
+
+        if (CurrentIndex > CurrentWriteIndex)
+          break;
+
         AQLPacket *PacketBuffer =
             static_cast<AQLPacket *>(HSAQueue->base_address);
-        AQLPacket &Packet = PacketBuffer[CurrentIndex % QueueSize];
+        AQLPacket &Packet = PacketBuffer[PacketIndex];
 
         Signal *CompletionSignal = nullptr;
 
         uint16_t PacketType =
-            (Packet.AgentDispatch.header >> HSA_PACKET_HEADER_TYPE) & 0xff;
+          (Packet.AgentDispatch.header >> HSA_PACKET_HEADER_TYPE) & 0xff;
+
+        // INVALID marks either a packet that is not in use (has already
+        // being processed) or is being updated by the producer.
+        if (PacketType == HSA_PACKET_TYPE_INVALID) {
+          // If it's a processed packet, we might be able to update the
+          // read index, to free space in the ring buffer.
+          if (Q->IsPacketProcessed(PacketIndex)) {
+            // We can only update read index if all the packets until this
+            // packet have been processed.
+            if (CurrentReadIndex == CurrentIndex) {
+              CurrentReadIndex = CurrentIndex + 1;
+              Q->storeReadIndex(CurrentReadIndex, MemoryOrder::Relaxed);
+              Q->SetPacketProcessed(PacketIndex, true);
+            }
+          }
+          continue;
+        }
 
         if (PacketType == HSA_PACKET_TYPE_BARRIER_AND) {
 
@@ -323,14 +379,23 @@ void CPUKernelAgent::Execute() {
           PRINT_VAR(PacketType);
           ABORT_UNIMPLEMENTED;
         }
-        ++CurrentIndex;
 
-        Q->storeReadIndex(CurrentIndex, MemoryOrder::Relaxed);
+        Packet.AgentDispatch.header = HSA_PACKET_TYPE_INVALID;
+        if (CurrentReadIndex == CurrentIndex) {
+          CurrentReadIndex = CurrentIndex + 1;
+          Q->storeReadIndex(CurrentReadIndex, MemoryOrder::Relaxed);
+          Q->SetPacketProcessed(PacketIndex, false);
+        } else {
+          // There are unprocessed packets before this index, we cannot
+          // update the read index yet, but have to wait until the earlier
+          // ones have been processed.
+          Q->SetPacketProcessed(PacketIndex, true);
+        }
 
         if (CompletionSignal != nullptr) {
           CompletionSignal->store(0, MemoryOrder::Relaxed);
         }
-      } while (CurrentIndex <= LastReadPos);
+      }
     }
   }
   ShutDown = false;

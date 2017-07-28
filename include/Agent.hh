@@ -74,6 +74,7 @@ public:
   virtual uint32_t getQueueMinSize() const = 0;
   virtual uint32_t getQueueMaxSize() const = 0;
   virtual hsa_queue_type_t getQueueType() const = 0;
+  virtual bool IsSupportedQueueType(hsa_queue_type_t t) const { return false; }
   virtual uint32_t getNUMAId() const = 0;
   virtual hsa_device_type_t getDeviceType() const = 0;
   virtual std::array<uint32_t, 4> getCacheSize() const = 0;

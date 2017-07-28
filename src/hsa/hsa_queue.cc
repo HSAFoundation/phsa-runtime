@@ -40,11 +40,6 @@ hsa_status_t HSA_API hsa_queue_create(
     return HSA_STATUS_ERROR_NOT_INITIALIZED;
   }
 
-  // Check queue type
-  if (type != HSA_QUEUE_TYPE_MULTI && type != HSA_QUEUE_TYPE_SINGLE) {
-    return HSA_STATUS_ERROR_INVALID_ARGUMENT;
-  }
-
   // Check that size is non-zero and a power of two
   if (queue == nullptr || size == 0 || size & (size - 1) != 0) {
     return HSA_STATUS_ERROR_INVALID_ARGUMENT;
@@ -60,7 +55,7 @@ hsa_status_t HSA_API hsa_queue_create(
     return HSA_STATUS_ERROR_OUT_OF_RESOURCES;
   }
 
-  if (A->getQueueType() != type) {
+  if (!A->IsSupportedQueueType(type)) {
     return HSA_STATUS_ERROR_INVALID_QUEUE_CREATION;
   }
 

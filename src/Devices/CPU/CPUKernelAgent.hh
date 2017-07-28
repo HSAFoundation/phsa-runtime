@@ -72,9 +72,10 @@ public:
   virtual uint32_t getQueueMinSize() const override { return 1; }
 
   virtual uint32_t getQueueMaxSize() const override { return 16; }
+  virtual bool IsSupportedQueueType(hsa_queue_type_t t) const { return true; }
 
   virtual hsa_queue_type_t getQueueType() const override {
-    return HSA_QUEUE_TYPE_SINGLE;
+    return HSA_QUEUE_TYPE_MULTI;
   }
 
   virtual uint32_t getNUMAId() const override {
