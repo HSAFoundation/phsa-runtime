@@ -210,7 +210,7 @@ void CPUKernelAgent::Execute() {
           DoorBell == LastDoorBell) {
         continue;
       }
-      DoorBell = LastDoorBell;
+      LastDoorBell = DoorBell;
 
       uint64_t CurrentReadIndex = Q->loadReadIndex(MemoryOrder::Relaxed);
       uint64_t CurrentWriteIndex = Q->loadWriteIndex(MemoryOrder::Relaxed);
@@ -227,13 +227,15 @@ void CPUKernelAgent::Execute() {
       // position which are given out in monotonic order.
 
       int PacketsToCheck =
-        HSAQueue->type == HSA_QUEUE_TYPE_SINGLE ? 1 : QueueSize;
-      for (int QI = 0; QI < PacketsToCheck; ++QI) {
+        HSAQueue->type == HSA_QUEUE_TYPE_SINGLE ?
+        (LastDoorBell - CurrentReadIndex) : QueueSize;
+      for (uint64_t CurrentIndex = CurrentReadIndex,
+             LastIndex = CurrentReadIndex + PacketsToCheck;
+           CurrentIndex <= LastIndex; ++CurrentIndex) {
 
-        uint64_t CurrentIndex = CurrentReadIndex + QI;
         int PacketIndex = CurrentIndex % QueueSize;
 
-        if (CurrentIndex > CurrentWriteIndex)
+        if (CurrentIndex >= CurrentWriteIndex)
           break;
 
         AQLPacket *PacketBuffer =
@@ -256,7 +258,7 @@ void CPUKernelAgent::Execute() {
             if (CurrentReadIndex == CurrentIndex) {
               CurrentReadIndex = CurrentIndex + 1;
               Q->storeReadIndex(CurrentReadIndex, MemoryOrder::Relaxed);
-              Q->SetPacketProcessed(PacketIndex, true);
+              Q->SetPacketProcessed(PacketIndex, false);
             }
           }
           continue;
