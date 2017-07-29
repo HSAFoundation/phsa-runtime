@@ -24,6 +24,7 @@
 #define HSA_RUNTIME_CPUMEMORYREGION_HH
 
 #include <cstdlib>
+#include <set>
 
 #include "MemoryRegion.hh"
 
@@ -36,10 +37,7 @@ public:
 
   virtual void *allocate(std::size_t Size, std::size_t Align) override;
 
-  virtual bool free(void *Ptr) override {
-    std::free(Ptr);
-    return true;
-  }
+  virtual bool free(void *Ptr) override;
 
   virtual hsa_region_segment_t getRegion() const override {
     return RegionSegment;
@@ -68,6 +66,7 @@ public:
 
 private:
   hsa_region_segment_t RegionSegment;
+  std::set<void*> Allocations;
 };
 
 } // namespace phsa

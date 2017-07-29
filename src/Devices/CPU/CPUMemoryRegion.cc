@@ -30,10 +30,23 @@ CPUMemoryRegion::CPUMemoryRegion(hsa_region_segment_t Segment)
 void *CPUMemoryRegion::allocate(std::size_t Size, std::size_t Align) {
   void *Ptr = nullptr;
   if (Align < sizeof(void *))
-    return malloc(Size);
-  if (posix_memalign(&Ptr, Align, Size) != 0)
+    Ptr = malloc(Size);
+  else if (posix_memalign(&Ptr, Align, Size) != 0)
     return nullptr;
+  Allocations.insert(Ptr);
   return Ptr;
 }
+
+bool CPUMemoryRegion::free(void *Ptr) {
+
+  if (Allocations.count(Ptr) > 0) {
+    std::free(Ptr);
+    Allocations.erase(Ptr);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 
 }

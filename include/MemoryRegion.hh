@@ -37,7 +37,8 @@ class MemoryRegion : public HSAObjectMapping<MemoryRegion, hsa_region_t> {
 public:
   virtual void *allocate(std::size_t Size, std::size_t Align) = 0;
 
-  // Free the given pointer, if in this region. Returns true if it was.
+  // Free the given pointer, if allocated in this region. Returns true if
+  // it was.
   virtual bool free(void *Ptr) = 0;
   virtual hsa_region_segment_t getRegion() const = 0;
   virtual uint32_t getGlobalFlags() const = 0;
