@@ -108,10 +108,10 @@ public:
     // we would use the minimum maximum of 256 here to hint small
     // local sizes (with possibly many work-groups) are preferable
     // for CPU/DSP Agents.
-    return {512, 512, 512};
+    return {1024, 1024, 1024};
   }
 
-  virtual uint32_t getWorkGroupMaxSize() const override { return 512; }
+  virtual uint32_t getWorkGroupMaxSize() const override { return 1024; }
 
   virtual hsa_dim3_t getGridMaxDim() const override {
     return {std::numeric_limits<uint32_t>::max(),
