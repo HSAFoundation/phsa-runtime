@@ -82,9 +82,11 @@ ELFExecutable::LoadCodeObject(phsa::Agent *Agent,
     bool IsKernel = Descriptor != nullptr && Descriptor->is_kernel;
 
     // Blacklist some uninteresting symbols
-    if (SymbolName.size() == 0 || SymbolName == "frame_dummy" ||
+    if (SymbolName.size() == 0 ||
+        (SymbolName[0] == '_') ||
         (SymbolName.size() > 7 && SymbolName.substr(0, 8) != "gccbrig." &&
          SymbolName.find(".") != std::string::npos) ||
+        SymbolName == "frame_dummy" ||
         SymbolName == "register_tm_clones" ||
         SymbolName == "deregister_tm_clones")
       continue;
@@ -110,8 +112,20 @@ ELFExecutable::LoadCodeObject(phsa::Agent *Agent,
 
       Program->addSymbol(K);
       registerSymbol(K);
+    } else if ((Symbol.st_info & 0x0f) == STT_OBJECT) {
+      Variable *V = new Variable;
+      V->Name = std::string("&") + SymbolName;
+      V->Type = HSA_SYMBOL_KIND_VARIABLE;
+      V->ModuleName = "";
+      // TODO: Support agent-scope variables properly.
+      V->Agent = NULL;
+      V->Linkage = HSA_SYMBOL_LINKAGE_PROGRAM;
+      V->IsDefinition = true;
+      V->Address = (void *)Program->symbolAddress(SymbolName, &Symbol);
+      Program->addSymbol(V);
+      registerSymbol(V);
     } else {
-      // TODO: other than kernel program/module scope symbols.
+      // TODO: other program/module scope symbol types.
     }
   }
   Program->setExecutable(*this);

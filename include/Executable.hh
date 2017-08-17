@@ -47,7 +47,7 @@ struct Symbol : public HSAObjectMapping<Symbol, hsa_executable_symbol_t> {
 };
 
 struct Variable : public Symbol {
-  uint64_t Address;
+  void *Address;
   hsa_variable_allocation_t Allocation;
   hsa_variable_segment_t Segment;
   uint32_t Alignment;
