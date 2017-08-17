@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2016 General Processor Tech.
+    Copyright (c) 2016-2017 General Processor Tech.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -18,7 +18,8 @@
     IN THE SOFTWARE.
 */
 /**
- * @author tomi.aijo@parmance.com for General Processor Tech.
+ * @author tomi.aijo@parmance.com and
+ *         pekka.jaaskelainen@parmance.com for General Processor Tech.
  */
 
 #include "CPUKernelAgent.hh"
@@ -165,9 +166,6 @@ void CPUKernelAgent::Execute() {
   RunningQueue = nullptr;
   InterruptingTheQueue = false;
 
-  hsa_signal_value_t LastDoorBell =
-    std::numeric_limits<hsa_signal_value_t>::max();
-
   while (!ShutDown) {
 
     std::list<Queue *> Queues = getQueues();
@@ -204,13 +202,11 @@ void CPUKernelAgent::Execute() {
       hsa_signal_value_t DoorBell =
         hsa_signal_load_acquire(HSAQueue->doorbell_signal);
 
-      // TODO: use a signal wait != LastDoorBell here to allow
-      // sleep waiting. Should work as LastDoorBell is initially max().
       if (DoorBell == std::numeric_limits<hsa_signal_value_t>::max() ||
-          DoorBell == LastDoorBell) {
+          DoorBell == Q->getLastHandledDoorBell()) {
         continue;
       }
-      LastDoorBell = DoorBell;
+      Q->setLastHandledDoorBell(DoorBell);
 
       uint64_t CurrentReadIndex = Q->loadReadIndex(MemoryOrder::Relaxed);
       uint64_t CurrentWriteIndex = Q->loadWriteIndex(MemoryOrder::Relaxed);
@@ -224,11 +220,11 @@ void CPUKernelAgent::Execute() {
 
       // In single producer queues, we execute packets in order as we know
       // the new packets are added by a single producer to a single write
-      // position which are given out in monotonic order.
+      // position which are handed out in monotonically increasing order.
 
       int PacketsToCheck =
         HSAQueue->type == HSA_QUEUE_TYPE_SINGLE ?
-        (LastDoorBell - CurrentReadIndex) : QueueSize;
+        (Q->getLastHandledDoorBell() - CurrentReadIndex) : QueueSize;
       for (uint64_t CurrentIndex = CurrentReadIndex,
              LastIndex = CurrentReadIndex + PacketsToCheck;
            CurrentIndex <= LastIndex; ++CurrentIndex) {

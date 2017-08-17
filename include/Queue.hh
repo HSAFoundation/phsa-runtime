@@ -1,5 +1,6 @@
 /*
-    Copyright (c) 2016 General Processor Tech.
+    Copyright (c) 2016-2017 General Processor Tech.
+
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
     deal in the Software without restriction, including without limitation the
@@ -17,7 +18,8 @@
     IN THE SOFTWARE.
 */
 /**
- * @author tomi.aijo@parmance.com for General Processor Tech.
+ * @author tomi.aijo@parmance.com and pekka.jaaskelainen@parmance.com
+ *         for General Processor Tech.
  */
 
 #ifndef HSA_RUNTIME_QUEUE_HH
@@ -38,7 +40,8 @@ namespace phsa {
 
 class Agent;
 
-// Queue class is an interface for implementing user mode queues and soft queues.
+// Queue class is an interface for implementing user mode queues and soft
+// queues.
 //
 // For an implementation example, see `src/Devices/CPU/UserModeQueue.[cc|hh]`.
 class Queue {
@@ -47,7 +50,8 @@ public:
       std::function<void(hsa_status_t, hsa_queue_t *, void *)>;
 
   Queue(hsa_queue_t *Queue, Agent *Owner = nullptr)
-      : Owner(Owner), Destroyed(false), Inactivated(false) {
+    : Owner(Owner), Destroyed(false), Inactivated(false),
+      LastHandledDoorBell(std::numeric_limits<hsa_signal_value_t>::max()) {
     registerQueue(this, Queue);
   }
 
@@ -89,6 +93,11 @@ public:
     if (PacketIsProcessed.size() == 0) return false;
     return PacketIsProcessed[QI]; }
 
+  hsa_signal_value_t getLastHandledDoorBell() const
+    { return LastHandledDoorBell; }
+  void setLastHandledDoorBell(hsa_signal_value_t DBValue)
+    { LastHandledDoorBell = DBValue; }
+
 protected:
   uint64_t getNextId() const { return ++QueueCount; }
 
@@ -112,6 +121,7 @@ private:
   bool Destroyed;
   bool Inactivated;
   std::vector<bool> PacketIsProcessed;
+  hsa_signal_value_t LastHandledDoorBell;
 
 protected:
   phsa_queue HSAQueue;
