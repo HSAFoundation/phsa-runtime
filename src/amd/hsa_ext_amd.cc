@@ -108,7 +108,11 @@ hsa_status_t HSA_API hsa_amd_profiling_async_copy_enable(bool enable) {
 hsa_status_t HSA_API hsa_amd_profiling_get_dispatch_time(
         hsa_agent_t agent, hsa_signal_t signal,
         hsa_amd_profiling_dispatch_time_t* time) {
-  ABORT_UNIMPLEMENTED;
+  // A dummy implementation here for compatibility purposes.
+  // There is no clean way to produce accurate profiling data
+  // in the pure HSA API.
+  time->start = 1;
+  time->end = 2;
   return HSA_STATUS_SUCCESS;
 }
 
