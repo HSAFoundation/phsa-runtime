@@ -226,9 +226,7 @@ hsa_amd_memory_pool_allocate(hsa_amd_memory_pool_t memory_pool, size_t size,
                              uint32_t flags, void** ptr) {
   hsa_region_t region;
   region.handle = memory_pool.handle;
-
-  hsa_memory_allocate(region, size, ptr);
-  return HSA_STATUS_SUCCESS;
+  return hsa_memory_allocate(region, size, ptr);
 }
 
 hsa_status_t HSA_API hsa_amd_memory_pool_free(void* ptr) {
