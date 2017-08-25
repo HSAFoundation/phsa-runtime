@@ -78,6 +78,7 @@ public:
   virtual uint32_t getNUMAId() const = 0;
   virtual hsa_device_type_t getDeviceType() const = 0;
   virtual std::array<uint32_t, 4> getCacheSize() const = 0;
+  virtual uint32_t getComputeUnitCount() const { return 1; };
   virtual const std::string getISA() const = 0;
   virtual Version getVersion() const = 0;
 

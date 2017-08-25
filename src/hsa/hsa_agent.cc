@@ -18,10 +18,12 @@
     IN THE SOFTWARE.
 */
 /**
- * @author tomi.aijo@parmance.com for General Processor Tech.
+ * @author tomi.aijo@parmance.com and pekka.jaaskelainen@parmance.com
+ *         for General Processor Tech.
  */
 
 #include "hsa.h"
+#include "hsa_ext_amd.h"
 
 #include "Agent.hh"
 #include "common/Info.hh"
@@ -173,6 +175,10 @@ hsa_status_t HSA_API hsa_agent_get_info(hsa_agent_t agent,
   }
   case HSA_AGENT_INFO_VERSION_MINOR: {
     WriteField(value, A->getVersion().Minor);
+    break;
+  }
+  case HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT: {
+    WriteField(value, A->getComputeUnitCount());
     break;
   }
   default:
