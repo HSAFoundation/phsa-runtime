@@ -81,12 +81,20 @@ ELFExecutable::LoadCodeObject(phsa::Agent *Agent,
 
     bool IsKernel = Descriptor != nullptr && Descriptor->is_kernel;
 
-    // Blacklist some uninteresting symbols
+    // Hide some uninteresting / compiler internal symbols. TODO:
+    // most of these are likely external symbols which can be skipped by
+    // checking for it.
     if (SymbolName.size() == 0 ||
-        (SymbolName[0] == '_') ||
         (SymbolName.size() > 7 && SymbolName.substr(0, 8) != "gccbrig." &&
          SymbolName.find(".") != std::string::npos) ||
         SymbolName == "frame_dummy" ||
+        SymbolName == "__do_global_dtors_aux_fini_array_entry" ||
+        SymbolName == "__frame_dummy_init_array_entry" ||
+        SymbolName == "__FRAME_END__" ||
+        SymbolName == "__dso_handle" ||
+        SymbolName == "_DYNAMIC" ||
+        SymbolName == "__TMC_END__" ||
+        SymbolName == "_GLOBAL_OFFSET_TABLE_" ||
         SymbolName == "register_tm_clones" ||
         SymbolName == "deregister_tm_clones")
       continue;
