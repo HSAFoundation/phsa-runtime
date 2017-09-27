@@ -65,7 +65,7 @@ public:
     assert(false && "Unsupported float rounding mode");
   }
 
-  virtual hsa_profile_t getProfile() const override { return HSA_PROFILE_FULL; }
+  virtual hsa_profile_t getProfile() const override { return HSA_PROFILE_BASE; }
 
   virtual uint32_t getQueuesMax() const override { return 1024; }
 
