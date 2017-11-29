@@ -52,3 +52,6 @@ endif()
 
 target_link_libraries(${LIBRARY_NAME} dl)
 target_link_libraries(${LIBRARY_NAME} elf)
+
+install(TARGETS ${LIBRARY_NAME}
+        LIBRARY DESTINATION "${PHSA_INSTALL_PUBLIC_LIBDIR}")
