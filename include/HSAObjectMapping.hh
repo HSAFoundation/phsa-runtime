@@ -26,6 +26,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <algorithm>
+#include <functional>
 
 #include "common/Logging.hh"
 
