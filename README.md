@@ -42,6 +42,10 @@ make
 make install
 ```
 
+Note: HSA client programs typically link to a library named 'libhsa-runtime64.so' while phsa-runtime builds a library called 'libphsa-runtime64.so'. Thus,
+it's a good idea to create a symlink 'libhsa-runtime64.so -> libphsa-runtime64.so'
+in the install location.
+
 # GCC BRIG frontend
 
 When a GCC version with the BRIG frontend ('gccbrig' binary) is installed to PATH and
