@@ -17,7 +17,8 @@
     IN THE SOFTWARE.
 */
 /**
- * @author tomi.aijo@parmance.com for General Processor Tech.
+ * @author tomi.aijo@parmance.com 2016
+ * @author pekka.jaaskelainen@parmance.com 2017 for General Processor Tech.
  */
 
 #ifndef HSA_RUNTIME_CPUMEMORYREGION_HH
@@ -25,6 +26,7 @@
 
 #include <cstdlib>
 #include <set>
+#include <mutex>
 
 #include "MemoryRegion.hh"
 
@@ -67,6 +69,7 @@ public:
 private:
   hsa_region_segment_t RegionSegment;
   std::set<void*> Allocations;
+  std::mutex AllocationsLock;
 };
 
 } // namespace phsa

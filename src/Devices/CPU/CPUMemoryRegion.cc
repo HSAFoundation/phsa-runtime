@@ -29,6 +29,7 @@ CPUMemoryRegion::CPUMemoryRegion(hsa_region_segment_t Segment)
 
 void *CPUMemoryRegion::allocate(std::size_t Size, std::size_t Align) {
   void *Ptr = nullptr;
+  std::lock_guard<std::mutex> Guard(AllocationsLock);
   if (Align < sizeof(void *))
     Ptr = malloc(Size);
   else if (posix_memalign(&Ptr, Align, Size) != 0)
@@ -38,7 +39,7 @@ void *CPUMemoryRegion::allocate(std::size_t Size, std::size_t Align) {
 }
 
 bool CPUMemoryRegion::free(void *Ptr) {
-
+  std::lock_guard<std::mutex> Guard(AllocationsLock);
   if (Allocations.count(Ptr) > 0) {
     std::free(Ptr);
     Allocations.erase(Ptr);
