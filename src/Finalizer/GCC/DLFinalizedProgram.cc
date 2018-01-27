@@ -65,8 +65,11 @@ void DLFinalizedProgram::defineGlobalSymbolAddress(std::string SymbolName,
   void *SymbolAddress = dlsym(Dlhandle, HostDefSymName.c_str());
   char *Error = dlerror();
   if (Error != NULL) {
-    std::cerr << "dlsym() error: '" << Error << "'" << std::endl;
-    abort();
+    // Whole program optimizations might have removed the host def
+    // in case it was used by a function not called by a kernel.
+    // Exit silently here, in case it was needed by a function,
+    // the actual error should occur already at when loading the .so.
+    return;
   }
   *(char **)SymbolAddress = (char *)Addr;
 }
