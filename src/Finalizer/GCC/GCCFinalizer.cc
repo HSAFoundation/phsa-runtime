@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2016 General Processor Tech.
+    Copyright (c) 2016-2018 General Processor Tech.
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
     deal in the Software without restriction, including without limitation the
@@ -132,6 +132,15 @@ HSAReturnValue<hsa_code_object_s> GCCFinalizer::finalizeProgram(
       compileCmd += std::string(" -I") + std::string(phsaRTIncDir) + " ";
     }
     compileCmd += "-flto ";
+  }
+
+  if (VendorCompilerOptions != NULL) {
+    std::stringstream optss(VendorCompilerOptions);
+    std::string option;
+    while (optss >> option) {
+      if (option == "-phsa_strict-aliasing")
+        compileCmd += "-fstrict-aliasing ";
+    }
   }
 
   char *additionalFlags = std::getenv("PHSA_COMPILER_FLAGS");
