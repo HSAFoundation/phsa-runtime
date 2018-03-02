@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2016 General Processor Tech.
+    Copyright (c) 2016-2018 General Processor Tech.
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
     deal in the Software without restriction, including without limitation the
@@ -108,10 +108,13 @@ public:
     // we would use the minimum maximum of 256 here to hint small
     // local sizes (with possibly many work-groups) are preferable
     // for CPU/DSP Agents.
-    return {1024, 1024, 1024};
+    return {std::numeric_limits<uint16_t>::max(),
+        std::numeric_limits<uint16_t>::max(),
+        std::numeric_limits<uint16_t>::max()};
   }
 
-  virtual uint32_t getWorkGroupMaxSize() const override { return 1024; }
+  virtual uint32_t getWorkGroupMaxSize() const override {
+    return std::numeric_limits<uint32_t>::max() / 4; }
 
   virtual hsa_dim3_t getGridMaxDim() const override {
     return {std::numeric_limits<uint32_t>::max(),
