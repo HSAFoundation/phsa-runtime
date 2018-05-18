@@ -165,7 +165,7 @@ DLFinalizedProgram *DLFinalizedProgram::deserialize(uint8_t *Buffer) {
   assert((tempDirC = mkdtemp(dirTemplate)) != nullptr);
   boost::filesystem::path tempDir(tempDirC);
   boost::filesystem::create_directories(tempDir);
-  boost::filesystem::path outPath(tempDir / "temp.brig");
+  boost::filesystem::path outPath(tempDir / "temp.elf");
   std::ofstream outfile(outPath.string(), std::ofstream::binary);
   outfile.write(reinterpret_cast<char *>(ElfBlob), ES);
 

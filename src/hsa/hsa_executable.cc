@@ -227,7 +227,7 @@ hsa_status_t HSA_API hsa_executable_get_symbol(
     const char *symbol_name, hsa_agent_t agent, int32_t call_convention,
     hsa_executable_symbol_t *symbol) {
 
-  if (symbol_name == nullptr && std::strlen(symbol_name) == 0) {
+  if (symbol_name == nullptr || std::strlen(symbol_name) == 0) {
     return HSA_STATUS_ERROR_INVALID_SYMBOL_NAME;
   }
 
@@ -238,7 +238,7 @@ hsa_status_t HSA_API hsa_executable_get_symbol(
   if (SymbolName[0] != '&')
     SymbolName = std::string("&") + SymbolName;
 
-  if (module_name != nullptr && SymbolName.size() > 0) {
+  if (module_name != nullptr && std::strlen(module_name) > 0) {
     SymbolName.insert(1, std::string(module_name).substr(1) + ".");
     SymbolName.insert(1, "gccbrig.");
   }

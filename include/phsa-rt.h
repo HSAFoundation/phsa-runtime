@@ -37,8 +37,9 @@
 
 /* Pointer type for the public facing kernel launcher function generated
          by gccbrig. This launches the actual kernel for all work groups and
-         work items in the grid. */
-typedef void (*gccbrigKernelLauncherFunc)(void *context, void *);
+         work items in the grid. First argument is the phsa context struct,
+         second a pointer to group memory, third to argument memory.  */
+typedef void (*gccbrigKernelLauncherFunc)(void *context, void *, void *);
 
 /* Pointer type for kernel functions produced by gccbrig from the HSAIL.
          This is private from outside the device binary and only called by

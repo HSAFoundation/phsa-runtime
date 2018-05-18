@@ -77,15 +77,21 @@ ELFExecutable::LoadCodeObject(phsa::Agent *Agent,
     std::string SymbolName =
         elf_strptr(ELF, SectionHeader->sh_link, Symbol.st_name);
 
-    phsa_descriptor *Descriptor = Program->findDescriptor(SymbolName);
+#define PHSA_KERNEL_PREFIX "phsa_kernel."
 
-    bool IsKernel = Descriptor != nullptr && Descriptor->is_kernel;
+    // PHSA kernels are always currently single WI kernels which do not
+    // use any local memory. They are detected from a known function name
+    // prefix.
+    bool IsPHSAKernel =
+      SymbolName.size() > strlen(PHSA_KERNEL_PREFIX) &&
+      SymbolName.substr(0, strlen(PHSA_KERNEL_PREFIX)) == PHSA_KERNEL_PREFIX;
 
     // Hide some uninteresting / compiler internal symbols. TODO:
     // most of these are likely external symbols which can be skipped by
     // checking for it.
     if (SymbolName.size() == 0 ||
-        (SymbolName.size() > 7 && SymbolName.substr(0, 8) != "gccbrig." &&
+        (!IsPHSAKernel && SymbolName.size() > 7 &&
+	 SymbolName.substr(0, 8) != "gccbrig." &&
          SymbolName.find(".") != std::string::npos) ||
         SymbolName == "frame_dummy" ||
         SymbolName == "__do_global_dtors_aux_fini_array_entry" ||
@@ -98,6 +104,9 @@ ELFExecutable::LoadCodeObject(phsa::Agent *Agent,
         SymbolName == "register_tm_clones" ||
         SymbolName == "deregister_tm_clones")
       continue;
+
+    phsa_descriptor *Descriptor = Program->findDescriptor(SymbolName);
+    bool IsKernel = Descriptor != nullptr && Descriptor->is_kernel;
 
     if (IsKernel) {
       Kernel *K = new Kernel;
@@ -116,6 +125,27 @@ ELFExecutable::LoadCodeObject(phsa::Agent *Agent,
       K->GroupSegmentSize = Descriptor->group_segment_size;
       K->PrivateSegmentSize = Descriptor->private_segment_size;
       K->DynamicCallStack = false; // TODO
+      K->ImplementationData = Program;
+
+      Program->addSymbol(K);
+      registerSymbol(K);
+    } else if (IsPHSAKernel) {
+      Kernel *K = new Kernel;
+      K->Name = std::string("&") + SymbolName;
+      K->Type = HSA_SYMBOL_KIND_KERNEL;
+      K->ModuleName = "";
+      K->Agent = NULL;
+      K->Linkage = HSA_SYMBOL_LINKAGE_PROGRAM;
+      K->IsDefinition = true;
+
+      K->Object = reinterpret_cast<uint64_t>(K);
+      K->Address = (void *)Program->symbolAddress(SymbolName, &Symbol);
+      K->KernargSegmentSize = 2048;
+      K->KernargSegmentAlignment = 1;
+
+      K->GroupSegmentSize = 0;
+      K->PrivateSegmentSize = 0;
+      K->DynamicCallStack = false;
       K->ImplementationData = Program;
 
       Program->addSymbol(K);

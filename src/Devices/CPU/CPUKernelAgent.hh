@@ -133,7 +133,10 @@ public:
   virtual void shutDown() override;
 
 private:
-  using GCCBrigKernelSignature = void(void *, void *);
+  // GCCBrig only uses the two of the first arguments. The third
+  // one is a shortcut for kernels finalized elsewhere and that
+  // prefer a simpler access to the argument buffer address.
+  using GCCBrigKernelSignature = void(void *, void *, void *);
   using GCCBrigKernel = std::function<GCCBrigKernelSignature>;
 
   bool AreDimensionsvalid(hsa_kernel_dispatch_packet_t &KernelPacket);

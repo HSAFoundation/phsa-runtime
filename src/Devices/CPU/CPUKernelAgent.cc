@@ -354,7 +354,7 @@ void CPUKernelAgent::Execute() {
                           K->KernargSegmentSize);
               RelocatedKernargs = true;
             }
-            KernelFunction(&LaunchData, GroupMemory);
+            KernelFunction(&LaunchData, GroupMemory, LaunchData.kernarg_addr);
 
             if (RelocatedKernargs) {
               free(LaunchData.kernarg_addr);
