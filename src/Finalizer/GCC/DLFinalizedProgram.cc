@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2015-2016 General Processor Tech.
+  Copyright (c) 2015-2018 General Processor Tech.
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -46,8 +46,11 @@ DLFinalizedProgram::~DLFinalizedProgram() {
     dlclose(Dlhandle);
   deregisterObject(this->toHSAObject());
 
-  if (!phsa::IsDebugMode())
-    unlink(BinaryFileName.c_str());
+  if (!phsa::IsDebugMode()) {
+    boost::filesystem::path TempF(BinaryFileName);
+    TempF.remove_filename();
+    boost::filesystem::remove_all(TempF);
+  }
 }
 
 void DLFinalizedProgram::defineGlobalSymbolAddress(std::string SymbolName,
