@@ -25,6 +25,7 @@
 
 #include <cstdlib>
 #include <map>
+#include <mutex>
 
 #include "MemoryRegion.hh"
 
@@ -39,6 +40,8 @@ public:
       : RegionSegment(Segment), StartAddress(RegionStart),
         FreeSpaceStart(RegionStart), RegionSize(Size),
         RegionEnd(RegionStart + Size - 1) {}
+
+  ~FixedMemoryRegion();
 
   virtual void *allocate(std::size_t Size, std::size_t Align) override;
   virtual bool free(void *Ptr) override;
@@ -72,6 +75,8 @@ private:
   // The last byte address inside the region.
   std::size_t RegionEnd;
   hsa_region_segment_t RegionSegment;
+  // For preventing data races.
+  std::mutex RegionLock;
 };
 
 } // namespace phsa

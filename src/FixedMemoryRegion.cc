@@ -37,6 +37,7 @@ namespace phsa {
  */
 void *FixedMemoryRegion::allocate(std::size_t Size, std::size_t Align) {
 
+  std::lock_guard<std::mutex> lock(RegionLock);
   size_t Addr = 0;
 
   assert(Align > 0);
@@ -112,9 +113,27 @@ void *FixedMemoryRegion::allocate(std::size_t Size, std::size_t Align) {
 }
 
 bool FixedMemoryRegion::free(void *Ptr) {
+  std::lock_guard<std::mutex> lock(RegionLock);
   size_t OldSize = Allocations.size();
   Allocations.erase((size_t)(Ptr));
+
+#ifdef DEBUG_ALLOCATION
+  if (OldSize > Allocations.size())
+    DEBUG << "### Freed " << std::hex << Ptr;
+#endif
+
   return (OldSize > Allocations.size());
+}
+
+FixedMemoryRegion::~FixedMemoryRegion() {
+#ifdef DEBUG_ALLOCATION
+  std::cout << "Leaked: " << std::endl;
+  for (auto Allocation : Allocations) {
+    size_t ChunkStart = Allocation.first;
+    size_t ChunkSize = Allocation.second;
+    std::cout << ChunkSize << " bytes at " << std::hex << ChunkStart << std::endl;
+  }
+#endif
 }
 
 } // namespace phsa
