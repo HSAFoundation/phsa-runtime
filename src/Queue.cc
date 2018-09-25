@@ -26,8 +26,10 @@
 
 namespace phsa {
 
-std::unordered_map<const hsa_queue_t *, Queue *> Queue::Registry;
-boost::shared_mutex Queue::RegistryLock;
+std::unordered_map<const hsa_queue_t *, Queue *>& Queue::Registry =
+  *(new std::unordered_map<const hsa_queue_t *, Queue *>);
+boost::shared_mutex &Queue::RegistryLock =
+  *(new boost::shared_mutex);
 
 std::atomic<uint64_t> Queue::QueueCount{0};
 

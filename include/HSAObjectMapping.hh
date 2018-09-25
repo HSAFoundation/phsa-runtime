@@ -122,14 +122,17 @@ public:
 private:
   const Mapper ObjectMapper;
 
-  static std::unordered_map<uint64_t, ObjectType *> Registry;
-  static std::recursive_mutex RegistryLock;
+  static std::unordered_map<uint64_t, ObjectType *> &Registry;
+  static std::recursive_mutex& RegistryLock;
 };
 
 template <class ObjectType, class HSAType>
-std::unordered_map<uint64_t, ObjectType *>
-    HSAObjectMapping<ObjectType, HSAType>::Registry;
+std::unordered_map<uint64_t, ObjectType *>&
+HSAObjectMapping<ObjectType, HSAType>::Registry =
+  *(new std::unordered_map<uint64_t, ObjectType *>);
+
 template <class ObjectType, class HSAType>
-std::recursive_mutex HSAObjectMapping<ObjectType, HSAType>::RegistryLock;
+std::recursive_mutex& HSAObjectMapping<ObjectType, HSAType>::RegistryLock =
+  *(new std::recursive_mutex);
 
 #endif // HSA_RUNTIME_HSAOBJECTMAPPING_HH

@@ -101,8 +101,8 @@ public:
 protected:
   uint64_t getNextId() const { return ++QueueCount; }
 
-  static std::unordered_map<const hsa_queue_t *, Queue *> Registry;
-  static boost::shared_mutex RegistryLock;
+  static std::unordered_map<const hsa_queue_t *, Queue *> &Registry;
+  static boost::shared_mutex &RegistryLock;
 
 private:
   static void registerQueue(Queue *Q, const hsa_queue_t *HSAQueue) {
