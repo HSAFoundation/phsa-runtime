@@ -47,8 +47,8 @@ hsa_status_t HSA_API hsa_memory_allocate(hsa_region_t region, size_t size,
     return HSA_STATUS_ERROR_INVALID_ALLOCATION;
   }
 
-  // Let's align at least to the pointer size like malloc does.
-  *ptr = MR->allocate(size, sizeof(void *));
+  // Align to 128 as that's the max alignment of OpenCL buffers (of double16*).
+  *ptr = MR->allocate(size, 128);
   if (*ptr == nullptr) {
     return HSA_STATUS_ERROR_OUT_OF_RESOURCES;
   } else {
